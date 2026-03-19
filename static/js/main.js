@@ -20,9 +20,16 @@ document.addEventListener('DOMContentLoaded', () => {
         previewContainer.classList.add('hidden');
 
         try {
-            showStatus('Iniciando processamento da imagem...', 'success');
+            const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
+            const endpoint = isYouTube ? '/api/download/youtube' : '/api/download';
+            
+            if (isYouTube) {
+                showStatus('Baixando vídeo do YouTube (isso pode levar alguns minutos dependendo do tamanho)...', 'success');
+            } else {
+                showStatus('Iniciando processamento da imagem...', 'success');
+            }
 
-            const response = await fetch('/api/download', {
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -32,29 +39,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Erro ao processar a imagem. Verifique se o link é válido.');
+                throw new Error(errorData.error || 'Erro ao processar o link. Verifique se o link é válido e público.');
             }
 
             const blob = await response.blob();
-            
             const objectUrl = window.URL.createObjectURL(blob);
             
-            imagePreview.src = objectUrl;
-            previewContainer.classList.remove('hidden');
+            if (!isYouTube) {
+                imagePreview.src = objectUrl;
+                previewContainer.classList.remove('hidden');
+            }
 
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = objectUrl;
             
-            let filename = 'imagem_convertida.png';
-            try {
-                const urlObj = new URL(url);
-                const pathname = urlObj.pathname;
-                const lastPart = pathname.substring(pathname.lastIndexOf('/') + 1);
-                if (lastPart) {
-                    filename = lastPart.split('.')[0] + '.png';
+            // Attempt to get filename from content-disposition header if present
+            let filename = isYouTube ? 'video_baixado.mp4' : 'imagem_convertida.png';
+            const disposition = response.headers.get('Content-Disposition');
+            if (disposition && disposition.includes('filename=')) {
+                const match = disposition.match(/filename="?([^"]+)"?/);
+                if (match && match[1]) {
+                    filename = decodeURIComponent(match[1]);
                 }
-            } catch (err) {}
+            } else if (!isYouTube) {
+                try {
+                    const urlObj = new URL(url);
+                    const pathname = urlObj.pathname;
+                    const lastPart = pathname.substring(pathname.lastIndexOf('/') + 1);
+                    if (lastPart) {
+                        filename = lastPart.split('.')[0] + '.png';
+                    }
+                } catch (err) {}
+            }
 
             a.download = filename;
             document.body.appendChild(a);
@@ -64,9 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 window.URL.revokeObjectURL(objectUrl);
                 a.remove();
-            }, 1000);
+            }, 5000); // Wait longer for videos
 
-            showStatus('Download e conversão concluídos com sucesso!', 'success');
+            showStatus('Download concluído com sucesso!', 'success');
             
         } catch (error) {
             console.error('Download error:', error);

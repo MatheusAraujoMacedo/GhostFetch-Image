@@ -13,16 +13,16 @@
     
     <div class="container glass-panel">
         <header>
-            <h1>Image Explorer</h1>
-            <p>Cole a URL de qualquer imagem protegida ou arquivo .webp para convertê-la e baixá-la em .png de alta qualidade.</p>
+            <h1>Explorer & Downloader</h1>
+            <p>Cole a URL de qualquer imagem protegida, arquivo .webp, ou <strong>vídeo/Shorts do YouTube</strong> para fazer o download fácil.</p>
         </header>
 
         <main>
             <form id="downloadForm">
                 <div class="input-group">
-                    <input type="url" id="imageUrl" placeholder="https://exemplo.com/imagem.webp" required autocomplete="off">
+                    <input type="url" id="imageUrl" placeholder="ex: https://youtube.com/... ou https://...imagem.webp" required autocomplete="off">
                     <button type="submit" id="submitBtn">
-                        <span class="btn-text">Processar Image</span>
+                        <span class="btn-text">Processar Link</span>
                         <div class="loader hidden" id="spinner"></div>
                     </button>
                 </div>
