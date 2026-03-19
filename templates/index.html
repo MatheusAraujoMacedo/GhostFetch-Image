@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Unblocker & Converter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    
+    <div class="container glass-panel">
+        <header>
+            <h1>Image Explorer</h1>
+            <p>Cole a URL de qualquer imagem protegida ou arquivo .webp para convertê-la e baixá-la em .png de alta qualidade.</p>
+        </header>
+
+        <main>
+            <form id="downloadForm">
+                <div class="input-group">
+                    <input type="url" id="imageUrl" placeholder="https://exemplo.com/imagem.webp" required autocomplete="off">
+                    <button type="submit" id="submitBtn">
+                        <span class="btn-text">Processar Image</span>
+                        <div class="loader hidden" id="spinner"></div>
+                    </button>
+                </div>
+            </form>
+
+            <div id="statusMessage" class="hidden"></div>
+
+            <div id="previewContainer" class="hidden glass-panel preview-panel">
+                <h3>Preview</h3>
+                <div class="img-wrapper">
+                    <img id="imagePreview" src="" alt="Preview da Imagem">
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
