@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: ghostfetch
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars: []

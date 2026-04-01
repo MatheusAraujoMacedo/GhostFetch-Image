@@ -1,41 +1,29 @@
-# WebP-Unblocker & Video Downloader
+# GhostFetch — Downloader Universal
 
-Um aplicativo web simples, moderno e elegante para baixar vídeos e Shorts do YouTube em MP4, além de baixar imagens bloqueadas e converter arquivos `.webp` da web diretamente para `.png` preservando a qualidade.
+Baixe imagens protegidas, vídeos do YouTube e **TikTok sem marca d'água**.
 
-## 🚀 Funcionalidades
+## Deploy no Render (Grátis)
 
-- **Download de Vídeos e Shorts do YouTube**: Basta colar o link do YouTube e o app baixa o MP4 na melhor qualidade!
-- **Bypass de Proteções Básicas**: Faz o download simulando um navegador real, ideal para imagens de sites que bloqueiam o clique direito ou escondem a extensão.
-- **Conversão Automática**: Processa imagens (como arquivos `.webp`) convertendo-os em tempo real para `.png`.
-- **Interface Premium (UI/UX)**: Estética moderna utilizando *Glassmorphism* (efeito de vidro no CSS), Dark Mode nativo, e animações visuais fluidas.
-- **Backend Robusto**: Servidor leve e direto ao ponto escrito em Python puro.
+### Opção 1: Deploy automático via Blueprint
+1. Suba o código para um repositório no GitHub
+2. Vá em [render.com/blueprints](https://render.com/blueprints)
+3. Clique **"New Blueprint Instance"**
+4. Conecte seu repositório → o `render.yaml` configura tudo automaticamente
 
-## 🛠️ Tecnologias Utilizadas
+### Opção 2: Deploy manual
+1. Vá em [render.com/dashboard](https://dashboard.render.com)
+2. Clique **"New" → "Web Service"**
+3. Conecte seu repositório GitHub
+4. Configure:
+   - **Runtime**: Docker
+   - **Plan**: Free
+5. Clique **"Create Web Service"**
 
-- **Frontend**: HTML5, Vanilla CSS3, JavaScript (Fetch API para requisições assíncronas inteligente)
-- **Backend**: Python, Flask, Requests, Pillow (Manipulação de imagens) e **yt-dlp** (O melhor e mais moderno baixador de vídeos do YouTube).
+## Rodar Localmente
 
-## 📦 Como executar localmente
+```bash
+pip install -r requirements.txt
+python app.py
+```
 
-1. **Clone o projeto:**
-   ```bash
-   git clone https://github.com/SEU_USUARIO/webp-unblocker.git
-   cd webp-unblocker
-   ```
-
-2. **Instale os requisitos:**
-   (É recomendado usar um ambiente virtual Python, `venv`)
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Inicie o servidor:**
-   ```bash
-   python app.py
-   ```
-
-4. **Acesse:**
-   Abra seu navegador em [http://localhost:5000](http://localhost:5000), cole a URL da imagem ou o link do vídeo do YouTube e seja feliz!
-
-## 🤝 Contribuindo
-Fique à vontade para fazer um *fork* do projeto e enviar sugestões ou novas funções de melhoria via *Pull Request*. Licença livre!
+Abra `http://localhost:5000`

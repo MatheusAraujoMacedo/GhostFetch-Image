@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Unblocker & Converter</title>
+    <title>GhostFetch — Downloader Universal</title>
+    <meta name="description" content="Baixe imagens protegidas, vídeos do YouTube e TikTok sem marca d'água. Rápido, grátis e sem cadastro.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -14,15 +15,37 @@
     <div class="container glass-panel">
         <header>
             <h1>Explorer & Downloader</h1>
-            <p>Cole a URL de qualquer imagem protegida, arquivo .webp, ou <strong>vídeo/Shorts do YouTube</strong> para fazer o download fácil.</p>
+            <p>Cole a URL de qualquer imagem protegida, vídeo do <strong>YouTube</strong>, ou <strong>TikTok sem marca d'água</strong> para download fácil.</p>
         </header>
 
         <main>
+            <!-- TikTok Mode Toggle -->
+            <div class="tiktok-toggle-wrapper" id="tiktokToggleWrapper">
+                <label class="tiktok-toggle" for="tiktokMode">
+                    <input type="checkbox" id="tiktokMode">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">
+                        <svg class="tiktok-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.98a8.21 8.21 0 0 0 4.76 1.52V7.05a4.84 4.84 0 0 1-1-.36z"/>
+                        </svg>
+                        Modo TikTok <span class="badge-no-wm">SEM MARCA D'ÁGUA</span>
+                    </span>
+                </label>
+            </div>
+
             <form id="downloadForm">
                 <div class="input-group">
-                    <input type="url" id="imageUrl" placeholder="ex: https://youtube.com/... ou https://...imagem.webp" required autocomplete="off">
+                    <textarea id="imageUrls" rows="3" placeholder="Cole uma ou várias URLs listadas aqui... (ex: https://youtube.com/... ou https://tiktok.com/...)" required></textarea>
+                    
+                    <select id="formatSelect" class="format-dropdown">
+                        <option value="auto">Automático (Vídeo MP4 / Imagem PNG)</option>
+                        <option value="audio">Apenas Áudio (M4A)</option>
+                        <option value="png">Forçar Imagem (PNG)</option>
+                        <option value="jpeg">Forçar Imagem (JPEG)</option>
+                    </select>
+
                     <button type="submit" id="submitBtn">
-                        <span class="btn-text">Processar Link</span>
+                        <span class="btn-text">Processar Links</span>
                         <div class="loader hidden" id="spinner"></div>
                     </button>
                 </div>

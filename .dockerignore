@@ -1,0 +1,9 @@
+.venv/
+.git/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.gitignore
+README.md
+render.yaml

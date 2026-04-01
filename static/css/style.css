@@ -8,6 +8,8 @@
     --text-muted: #94a3b8;
     --error: #ef4444;
     --success: #10b981;
+    --tiktok-pink: #ff0050;
+    --tiktok-cyan: #00f2ea;
 }
 
 * {
@@ -100,7 +102,114 @@ header p {
     margin-bottom: 2.5rem;
 }
 
-/* Form Styles */
+/* ========== TikTok Toggle ========== */
+.tiktok-toggle-wrapper {
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    background: rgba(255, 0, 80, 0.05);
+    border: 1px solid rgba(255, 0, 80, 0.12);
+    transition: all 0.4s ease;
+}
+
+.tiktok-toggle-wrapper:hover {
+    border-color: rgba(255, 0, 80, 0.3);
+    background: rgba(255, 0, 80, 0.08);
+}
+
+/* Auto-detect highlight animation */
+.tiktok-toggle-wrapper.auto-detected {
+    animation: tiktokPulse 1.5s ease;
+}
+
+@keyframes tiktokPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 0, 80, 0.4); border-color: rgba(255, 0, 80, 0.5); }
+    50%  { box-shadow: 0 0 20px 4px rgba(0, 242, 234, 0.3); border-color: var(--tiktok-cyan); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 0, 80, 0); border-color: rgba(255, 0, 80, 0.12); }
+}
+
+.tiktok-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.tiktok-toggle input[type="checkbox"] {
+    display: none;
+}
+
+/* Custom Toggle Slider */
+.toggle-slider {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.toggle-slider::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: all 0.3s ease;
+}
+
+.tiktok-toggle input:checked + .toggle-slider {
+    background: linear-gradient(135deg, var(--tiktok-pink), var(--tiktok-cyan));
+}
+
+.tiktok-toggle input:checked + .toggle-slider::after {
+    left: 23px;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(255, 0, 80, 0.5);
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: color 0.3s ease;
+}
+
+.tiktok-toggle input:checked ~ .toggle-label {
+    color: var(--text-main);
+}
+
+.tiktok-icon {
+    color: var(--text-muted);
+    transition: color 0.3s ease;
+}
+
+.tiktok-toggle input:checked ~ .toggle-label .tiktok-icon {
+    color: var(--tiktok-pink);
+    filter: drop-shadow(0 0 4px rgba(255, 0, 80, 0.5));
+}
+
+.badge-no-wm {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, var(--tiktok-pink), var(--tiktok-cyan));
+    color: #fff;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* ========== Form Styles ========== */
 .input-group {
     display: flex;
     flex-direction: column;
@@ -108,7 +217,7 @@ header p {
     margin-bottom: 1.5rem;
 }
 
-input[type="url"] {
+textarea {
     width: 100%;
     padding: 1rem 1.5rem;
     font-size: 1rem;
@@ -118,9 +227,35 @@ input[type="url"] {
     color: var(--text-main);
     outline: none;
     transition: all 0.3s ease;
+    resize: vertical;
 }
 
-input[type="url"]:focus {
+textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.format-dropdown {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: all 0.3s ease;
+}
+
+.format-dropdown option {
+    background: var(--bg-color);
+    color: var(--text-main);
+}
+
+.format-dropdown:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
@@ -224,4 +359,23 @@ button:disabled {
     display: block;
     object-fit: contain;
     max-height: 300px;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 480px) {
+    .container {
+        padding: 2rem 1.25rem;
+    }
+
+    header h1 {
+        font-size: 1.75rem;
+    }
+
+    .toggle-label {
+        font-size: 0.8rem;
+    }
+
+    .badge-no-wm {
+        font-size: 0.55rem;
+    }
 }

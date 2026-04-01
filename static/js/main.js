@@ -1,18 +1,51 @@
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('downloadForm');
-    const urlInput = document.getElementById('imageUrl');
+    const urlsInput = document.getElementById('imageUrls');
+    const formatSelect = document.getElementById('formatSelect');
     const submitBtn = document.getElementById('submitBtn');
     const btnText = submitBtn.querySelector('.btn-text');
     const spinner = document.getElementById('spinner');
     const statusMessage = document.getElementById('statusMessage');
     const previewContainer = document.getElementById('previewContainer');
     const imagePreview = document.getElementById('imagePreview');
+    const tiktokToggle = document.getElementById('tiktokMode');
+    const tiktokWrapper = document.getElementById('tiktokToggleWrapper');
+
+    // Auto-detect TikTok URLs and activate toggle
+    urlsInput.addEventListener('input', () => {
+        const text = urlsInput.value.trim();
+        const isTikTok = /tiktok\.com|vm\.tiktok\.com/i.test(text);
+        
+        if (isTikTok && !tiktokToggle.checked) {
+            tiktokToggle.checked = true;
+            tiktokWrapper.classList.add('auto-detected');
+            setTimeout(() => tiktokWrapper.classList.remove('auto-detected'), 1500);
+        }
+    });
+
+    // Toggle visual feedback
+    tiktokToggle.addEventListener('change', () => {
+        if (tiktokToggle.checked) {
+            formatSelect.disabled = true;
+            formatSelect.style.opacity = '0.4';
+        } else {
+            formatSelect.disabled = false;
+            formatSelect.style.opacity = '1';
+        }
+    });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const url = urlInput.value.trim();
-        if (!url) return;
+        const text = urlsInput.value.trim();
+        if (!text) return;
+
+        const urls = text.split('\n').map(u => u.trim()).filter(u => u);
+        if (urls.length === 0) return;
+
+        const format = formatSelect.value;
+        const isBatch = urls.length > 1;
+        const isTikTokMode = tiktokToggle.checked;
 
         // Reset UI Context
         setLoadingState(true);
@@ -20,13 +53,33 @@ document.addEventListener('DOMContentLoaded', () => {
         previewContainer.classList.add('hidden');
 
         try {
-            const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
-            const endpoint = isYouTube ? '/api/download/youtube' : '/api/download';
-            
-            if (isYouTube) {
-                showStatus('Baixando vídeo do YouTube (isso pode levar alguns minutos dependendo do tamanho)...', 'success');
+            let endpoint = '';
+            let bodyPayload = {};
+            let isMedia = format === 'audio' || (format === 'auto' && urls.some(url => 
+                url.includes('youtube.com') || url.includes('youtu.be') || 
+                url.includes('tiktok.com') || url.includes('instagram.com') || 
+                url.includes('x.com') || url.includes('twitter.com')
+            ));
+
+            // TikTok Mode: use dedicated endpoint (single URL only)
+            if (isTikTokMode && !isBatch) {
+                endpoint = '/api/download/tiktok';
+                bodyPayload = { url: urls[0] };
+                showStatus('🎵 Baixando vídeo TikTok sem marca d\'água... Aguarde, isso pode levar alguns segundos.', 'success');
+            } else if (isBatch) {
+                endpoint = '/api/download/batch';
+                bodyPayload = { urls, format };
+                showStatus('Processando Lote (Batch). Isso pode levar vários minutos, não feche a página...', 'success');
             } else {
-                showStatus('Iniciando processamento da imagem...', 'success');
+                const url = urls[0];
+                endpoint = isMedia ? '/api/download/media' : '/api/download';
+                bodyPayload = { url, format };
+                
+                if (isMedia) {
+                    showStatus('Baixando Mídia (isso pode levar alguns minutos dependendo do tamanho)...', 'success');
+                } else {
+                    showStatus('Processando Imagem...', 'success');
+                }
             }
 
             const response = await fetch(endpoint, {
@@ -34,18 +87,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ url })
+                body: JSON.stringify(bodyPayload)
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Erro ao processar o link. Verifique se o link é válido e público.');
+                throw new Error(errorData.error || 'Erro ao processar o(s) link(s). Verifique se são válidos e públicos.');
             }
 
             const blob = await response.blob();
             const objectUrl = window.URL.createObjectURL(blob);
             
-            if (!isYouTube) {
+            if (!isBatch && !isMedia && !isTikTokMode) {
+                // Previews ONLY for single images
                 imagePreview.src = objectUrl;
                 previewContainer.classList.remove('hidden');
             }
@@ -54,23 +108,19 @@ document.addEventListener('DOMContentLoaded', () => {
             a.style.display = 'none';
             a.href = objectUrl;
             
-            // Attempt to get filename from content-disposition header if present
-            let filename = isYouTube ? 'video_baixado.mp4' : 'imagem_convertida.png';
+            // Determine filename
+            let filename = 'download';
+            if (isTikTokMode) filename = 'tiktok_video.mp4';
+            else if (isBatch) filename = 'downloads.zip';
+            else if (isMedia) filename = format === 'audio' ? 'audio_baixado.m4a' : 'video_baixado.mp4';
+            else filename = `imagem_convertida.${format === 'auto' ? 'png' : format}`;
+            
             const disposition = response.headers.get('Content-Disposition');
             if (disposition && disposition.includes('filename=')) {
                 const match = disposition.match(/filename="?([^"]+)"?/);
                 if (match && match[1]) {
                     filename = decodeURIComponent(match[1]);
                 }
-            } else if (!isYouTube) {
-                try {
-                    const urlObj = new URL(url);
-                    const pathname = urlObj.pathname;
-                    const lastPart = pathname.substring(pathname.lastIndexOf('/') + 1);
-                    if (lastPart) {
-                        filename = lastPart.split('.')[0] + '.png';
-                    }
-                } catch (err) {}
             }
 
             a.download = filename;
@@ -81,9 +131,13 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 window.URL.revokeObjectURL(objectUrl);
                 a.remove();
-            }, 5000); // Wait longer for videos
+            }, 5000); 
 
-            showStatus('Download concluído com sucesso!', 'success');
+            if (isTikTokMode) {
+                showStatus('✅ Vídeo TikTok baixado com sucesso — sem marca d\'água!', 'success');
+            } else {
+                showStatus('Download concluído com sucesso!', 'success');
+            }
             
         } catch (error) {
             console.error('Download error:', error);
@@ -96,11 +150,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function setLoadingState(isLoading) {
         if (isLoading) {
             submitBtn.disabled = true;
-            btnText.textContent = 'Processando...';
+            btnText.textContent = tiktokToggle.checked ? 'Baixando TikTok...' : 'Processando...';
             spinner.classList.remove('hidden');
         } else {
             submitBtn.disabled = false;
-            btnText.textContent = 'Processar Image';
+            btnText.textContent = 'Processar Links';
             spinner.classList.add('hidden');
         }
     }

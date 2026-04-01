@@ -3,3 +3,4 @@ requests
 Pillow
 Flask-CORS
 yt-dlp
+gunicorn
