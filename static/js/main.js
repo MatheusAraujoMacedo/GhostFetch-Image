@@ -1,43 +1,215 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('downloadForm');
-    const urlsInput = document.getElementById('imageUrls');
-    const formatSelect = document.getElementById('formatSelect');
-    const submitBtn = document.getElementById('submitBtn');
+    const $ = id => document.getElementById(id);
+
+    const form = $('downloadForm');
+    const urlInput = $('urlInput');
+    const formatSelect = $('formatSelect');
+    const submitBtn = $('submitBtn');
     const btnText = submitBtn.querySelector('.btn-text');
-    const spinner = document.getElementById('spinner');
-    const statusMessage = document.getElementById('statusMessage');
-    const previewContainer = document.getElementById('previewContainer');
-    const imagePreview = document.getElementById('imagePreview');
-    const tiktokToggle = document.getElementById('tiktokMode');
-    const tiktokWrapper = document.getElementById('tiktokToggleWrapper');
+    const btnIcon = submitBtn.querySelector('.btn-icon');
+    const btnLoader = $('btnLoader');
+    const progressWrapper = $('progressWrapper');
+    const progressFill = $('progressFill');
+    const progressLabel = $('progressLabel');
+    const detectedBadge = $('detectedBadge');
+    const detectedText = $('detectedText');
+    const previewContainer = $('previewContainer');
+    const imagePreview = $('imagePreview');
+    const previewClose = $('previewClose');
+    const toast = $('toast');
+    const toastIcon = $('toastIcon');
+    const toastMessage = $('toastMessage');
+    const toastClose = $('toastClose');
+    const dropZone = $('dropZone');
+    const dropOverlay = $('dropOverlay');
 
-    // Auto-detect TikTok URLs and activate toggle
-    urlsInput.addEventListener('input', () => {
-        const text = urlsInput.value.trim();
-        const isTikTok = /tiktok\.com|vm\.tiktok\.com/i.test(text);
-        
-        if (isTikTok && !tiktokToggle.checked) {
-            tiktokToggle.checked = true;
-            tiktokWrapper.classList.add('auto-detected');
-            setTimeout(() => tiktokWrapper.classList.remove('auto-detected'), 1500);
+    const cards = {
+        image: $('cardImage'),
+        youtube: $('cardYoutube'),
+        tiktok: $('cardTiktok')
+    };
+
+    let toastTimeout = null;
+
+    // ==========================================
+    // Platform Detection
+    // ==========================================
+    const PLATFORMS = {
+        tiktok: {
+            pattern: /tiktok\.com|vm\.tiktok\.com/i,
+            label: 'TikTok detectado — download sem marca d\'água',
+            card: 'tiktok'
+        },
+        youtube: {
+            pattern: /youtube\.com|youtu\.be/i,
+            label: 'YouTube detectado — vídeo em alta qualidade',
+            card: 'youtube'
+        },
+        media: {
+            pattern: /instagram\.com|x\.com|twitter\.com/i,
+            label: 'Mídia social detectada — download automático',
+            card: null
         }
-    });
+    };
 
-    // Toggle visual feedback
-    tiktokToggle.addEventListener('change', () => {
-        if (tiktokToggle.checked) {
-            formatSelect.disabled = true;
-            formatSelect.style.opacity = '0.4';
+    function detectPlatform(text) {
+        for (const [key, config] of Object.entries(PLATFORMS)) {
+            if (config.pattern.test(text)) return { key, ...config };
+        }
+        if (text.match(/\.(png|jpe?g|gif|webp|svg|bmp)/i)) {
+            return { key: 'image', label: 'Imagem detectada — conversão automática', card: 'image' };
+        }
+        return null;
+    }
+
+    // ==========================================
+    // Smart URL Input Detection
+    // ==========================================
+    urlInput.addEventListener('input', () => {
+        const text = urlInput.value.trim();
+        const platform = detectPlatform(text);
+
+        Object.values(cards).forEach(c => c.classList.remove('active'));
+
+        if (platform) {
+            if (platform.card && cards[platform.card]) {
+                cards[platform.card].classList.add('active');
+            }
+            detectedText.textContent = platform.label;
+            detectedBadge.classList.remove('hidden');
+
+            if (platform.key === 'tiktok') {
+                formatSelect.disabled = true;
+                formatSelect.parentElement.style.opacity = '0.4';
+            } else {
+                formatSelect.disabled = false;
+                formatSelect.parentElement.style.opacity = '1';
+            }
         } else {
+            detectedBadge.classList.add('hidden');
             formatSelect.disabled = false;
-            formatSelect.style.opacity = '1';
+            formatSelect.parentElement.style.opacity = '1';
         }
     });
 
+    // ==========================================
+    // Feature Card Clicks
+    // ==========================================
+    Object.entries(cards).forEach(([platform, card]) => {
+        card.addEventListener('click', () => {
+            Object.values(cards).forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+
+            const placeholders = {
+                image: 'Cole o link direto da imagem... (ex: https://site.com/foto.webp)',
+                youtube: 'Cole o link do YouTube... (ex: https://youtube.com/watch?v=...)',
+                tiktok: 'Cole o link do TikTok... (ex: https://www.tiktok.com/@user/video/...)'
+            };
+
+            urlInput.placeholder = placeholders[platform];
+            urlInput.focus();
+
+            if (platform === 'tiktok') {
+                formatSelect.disabled = true;
+                formatSelect.parentElement.style.opacity = '0.4';
+                detectedText.textContent = 'Modo TikTok ativo — download sem marca d\'água';
+                detectedBadge.classList.remove('hidden');
+            } else {
+                formatSelect.disabled = false;
+                formatSelect.parentElement.style.opacity = '1';
+                detectedBadge.classList.add('hidden');
+            }
+        });
+    });
+
+    // ==========================================
+    // Drag & Drop
+    // ==========================================
+    let dragCounter = 0;
+
+    dropZone.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dragCounter++;
+        dropOverlay.classList.remove('hidden');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter === 0) dropOverlay.classList.add('hidden');
+    });
+
+    dropZone.addEventListener('dragover', (e) => e.preventDefault());
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragCounter = 0;
+        dropOverlay.classList.add('hidden');
+
+        const text = e.dataTransfer.getData('text/plain');
+        if (text) {
+            urlInput.value = text;
+            urlInput.dispatchEvent(new Event('input'));
+        }
+    });
+
+    // ==========================================
+    // Progress Bar
+    // ==========================================
+    function showProgress(label) {
+        progressWrapper.classList.remove('hidden');
+        progressFill.classList.add('indeterminate');
+        progressLabel.textContent = label || 'Conectando...';
+    }
+
+    function updateProgress(label) {
+        progressLabel.textContent = label;
+    }
+
+    function hideProgress() {
+        progressWrapper.classList.add('hidden');
+        progressFill.classList.remove('indeterminate');
+        progressFill.style.width = '0%';
+    }
+
+    // ==========================================
+    // Toast System
+    // ==========================================
+    function showToast(message, type = 'success') {
+        if (toastTimeout) clearTimeout(toastTimeout);
+
+        toastIcon.textContent = type === 'success' ? '✅' : '❌';
+        toastMessage.textContent = message;
+        toast.className = `toast toast-${type}`;
+
+        requestAnimationFrame(() => {
+            toast.classList.add('visible');
+        });
+
+        toastTimeout = setTimeout(() => dismissToast(), 5000);
+    }
+
+    function dismissToast() {
+        toast.classList.remove('visible');
+        setTimeout(() => toast.classList.add('hidden'), 300);
+    }
+
+    toastClose.addEventListener('click', dismissToast);
+
+    // ==========================================
+    // Preview
+    // ==========================================
+    previewClose.addEventListener('click', () => {
+        previewContainer.classList.add('hidden');
+    });
+
+    // ==========================================
+    // Form Submit
+    // ==========================================
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        const text = urlsInput.value.trim();
+
+        const text = urlInput.value.trim();
         if (!text) return;
 
         const urls = text.split('\n').map(u => u.trim()).filter(u => u);
@@ -45,128 +217,124 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const format = formatSelect.value;
         const isBatch = urls.length > 1;
-        const isTikTokMode = tiktokToggle.checked;
+        const platform = detectPlatform(text);
+        const isTikTokMode = platform && platform.key === 'tiktok';
+        const isMedia = format === 'audio' || (format === 'auto' && urls.some(url =>
+            url.includes('youtube.com') || url.includes('youtu.be') ||
+            url.includes('tiktok.com') || url.includes('instagram.com') ||
+            url.includes('x.com') || url.includes('twitter.com')
+        ));
 
-        // Reset UI Context
-        setLoadingState(true);
-        hideStatus();
+        setLoading(true);
         previewContainer.classList.add('hidden');
 
         try {
-            let endpoint = '';
-            let bodyPayload = {};
-            let isMedia = format === 'audio' || (format === 'auto' && urls.some(url => 
-                url.includes('youtube.com') || url.includes('youtu.be') || 
-                url.includes('tiktok.com') || url.includes('instagram.com') || 
-                url.includes('x.com') || url.includes('twitter.com')
-            ));
+            let endpoint, bodyPayload;
 
-            // TikTok Mode: use dedicated endpoint (single URL only)
             if (isTikTokMode && !isBatch) {
                 endpoint = '/api/download/tiktok';
                 bodyPayload = { url: urls[0] };
-                showStatus('🎵 Baixando vídeo TikTok sem marca d\'água... Aguarde, isso pode levar alguns segundos.', 'success');
+                showProgress('Conectando ao TikTok...');
+                setTimeout(() => updateProgress('Baixando vídeo sem marca d\'água...'), 2000);
             } else if (isBatch) {
                 endpoint = '/api/download/batch';
                 bodyPayload = { urls, format };
-                showStatus('Processando Lote (Batch). Isso pode levar vários minutos, não feche a página...', 'success');
+                showProgress('Processando lote...');
+            } else if (isMedia) {
+                endpoint = '/api/download/media';
+                bodyPayload = { url: urls[0], format };
+                showProgress('Baixando mídia...');
+                setTimeout(() => updateProgress('Processando arquivo...'), 3000);
             } else {
-                const url = urls[0];
-                endpoint = isMedia ? '/api/download/media' : '/api/download';
-                bodyPayload = { url, format };
-                
-                if (isMedia) {
-                    showStatus('Baixando Mídia (isso pode levar alguns minutos dependendo do tamanho)...', 'success');
-                } else {
-                    showStatus('Processando Imagem...', 'success');
-                }
+                endpoint = '/api/download';
+                bodyPayload = { url: urls[0], format };
+                showProgress('Processando imagem...');
             }
 
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bodyPayload)
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Erro ao processar o(s) link(s). Verifique se são válidos e públicos.');
+                const err = await response.json();
+                throw new Error(err.error || 'Erro ao processar. Verifique se o link é válido e público.');
             }
 
+            updateProgress('Finalizando download...');
+
             const blob = await response.blob();
-            const objectUrl = window.URL.createObjectURL(blob);
-            
+            const objectUrl = URL.createObjectURL(blob);
+
             if (!isBatch && !isMedia && !isTikTokMode) {
-                // Previews ONLY for single images
                 imagePreview.src = objectUrl;
                 previewContainer.classList.remove('hidden');
             }
 
             const a = document.createElement('a');
-            a.style.display = 'none';
             a.href = objectUrl;
-            
-            // Determine filename
+
             let filename = 'download';
             if (isTikTokMode) filename = 'tiktok_video.mp4';
             else if (isBatch) filename = 'downloads.zip';
-            else if (isMedia) filename = format === 'audio' ? 'audio_baixado.m4a' : 'video_baixado.mp4';
-            else filename = `imagem_convertida.${format === 'auto' ? 'png' : format}`;
-            
+            else if (isMedia) filename = format === 'audio' ? 'audio.m4a' : 'video.mp4';
+            else filename = `imagem.${format === 'auto' ? 'png' : format}`;
+
             const disposition = response.headers.get('Content-Disposition');
             if (disposition && disposition.includes('filename=')) {
                 const match = disposition.match(/filename="?([^"]+)"?/);
-                if (match && match[1]) {
-                    filename = decodeURIComponent(match[1]);
-                }
+                if (match && match[1]) filename = decodeURIComponent(match[1]);
             }
 
             a.download = filename;
             document.body.appendChild(a);
             a.click();
-            
-            // Clean up later
-            setTimeout(() => {
-                window.URL.revokeObjectURL(objectUrl);
-                a.remove();
-            }, 5000); 
 
-            if (isTikTokMode) {
-                showStatus('✅ Vídeo TikTok baixado com sucesso — sem marca d\'água!', 'success');
-            } else {
-                showStatus('Download concluído com sucesso!', 'success');
-            }
-            
+            setTimeout(() => {
+                URL.revokeObjectURL(objectUrl);
+                a.remove();
+            }, 5000);
+
+            const msg = isTikTokMode
+                ? 'Vídeo TikTok baixado sem marca d\'água!'
+                : 'Download concluído com sucesso!';
+            showToast(msg, 'success');
+
         } catch (error) {
             console.error('Download error:', error);
-            showStatus(error.message, 'error');
+            showToast(error.message, 'error');
         } finally {
-            setLoadingState(false);
+            setLoading(false);
+            hideProgress();
         }
     });
 
-    function setLoadingState(isLoading) {
-        if (isLoading) {
-            submitBtn.disabled = true;
-            btnText.textContent = tiktokToggle.checked ? 'Baixando TikTok...' : 'Processando...';
-            spinner.classList.remove('hidden');
+    // ==========================================
+    // Loading State
+    // ==========================================
+    function setLoading(on) {
+        submitBtn.disabled = on;
+        if (on) {
+            btnText.textContent = 'Baixando...';
+            btnIcon.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
         } else {
-            submitBtn.disabled = false;
-            btnText.textContent = 'Processar Links';
-            spinner.classList.add('hidden');
+            btnText.textContent = 'Download';
+            btnIcon.classList.remove('hidden');
+            btnLoader.classList.add('hidden');
         }
     }
 
-    function showStatus(message, type) {
-        statusMessage.textContent = message;
-        statusMessage.className = type;
-        statusMessage.classList.remove('hidden');
-    }
-
-    function hideStatus() {
-        statusMessage.classList.add('hidden');
-        statusMessage.className = '';
-    }
+    // ==========================================
+    // Keyboard Shortcuts
+    // ==========================================
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            urlInput.value = '';
+            urlInput.dispatchEvent(new Event('input'));
+            previewContainer.classList.add('hidden');
+            dismissToast();
+        }
+    });
 });

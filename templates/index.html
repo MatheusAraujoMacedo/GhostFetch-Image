@@ -5,61 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GhostFetch — Downloader Universal</title>
     <meta name="description" content="Baixe imagens protegidas, vídeos do YouTube e TikTok sem marca d'água. Rápido, grátis e sem cadastro.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <meta property="og:title" content="GhostFetch — Downloader Universal">
+    <meta property="og:description" content="Baixe imagens, vídeos do YouTube e TikTok sem marca d'água.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👻</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    
-    <div class="container glass-panel">
-        <header>
-            <h1>Explorer & Downloader</h1>
-            <p>Cole a URL de qualquer imagem protegida, vídeo do <strong>YouTube</strong>, ou <strong>TikTok sem marca d'água</strong> para download fácil.</p>
+    <div class="bg-mesh"></div>
+    <div class="bg-grain"></div>
+
+    <div class="app-wrapper">
+        <!-- Hero / Branding -->
+        <header class="hero">
+            <div class="logo">
+                <span class="logo-icon">👻</span>
+                <h1>GhostFetch</h1>
+            </div>
+            <p class="tagline">Baixe qualquer mídia. Sem limites. Sem cadastro.</p>
         </header>
 
-        <main>
-            <!-- TikTok Mode Toggle -->
-            <div class="tiktok-toggle-wrapper" id="tiktokToggleWrapper">
-                <label class="tiktok-toggle" for="tiktokMode">
-                    <input type="checkbox" id="tiktokMode">
-                    <span class="toggle-slider"></span>
-                    <span class="toggle-label">
-                        <svg class="tiktok-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.98a8.21 8.21 0 0 0 4.76 1.52V7.05a4.84 4.84 0 0 1-1-.36z"/>
+        <!-- Feature Cards -->
+        <section class="features" aria-label="Plataformas suportadas">
+            <button type="button" class="feature-card" data-platform="image" id="cardImage">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+                    </svg>
+                </div>
+                <span class="feature-name">Imagens</span>
+                <span class="feature-desc">PNG, JPEG, WebP</span>
+            </button>
+
+            <button type="button" class="feature-card" data-platform="youtube" id="cardYoutube">
+                <div class="feature-icon icon-youtube">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.65 31.65 0 0 0 0 12a31.65 31.65 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.65 31.65 0 0 0 24 12a31.65 31.65 0 0 0-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/>
+                    </svg>
+                </div>
+                <span class="feature-name">YouTube</span>
+                <span class="feature-desc">Vídeo & Áudio</span>
+            </button>
+
+            <button type="button" class="feature-card" data-platform="tiktok" id="cardTiktok">
+                <div class="feature-icon icon-tiktok">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.98a8.21 8.21 0 0 0 4.76 1.52V7.05a4.84 4.84 0 0 1-1-.36z"/>
+                    </svg>
+                </div>
+                <span class="feature-name">TikTok</span>
+                <span class="feature-badge">SEM WATERMARK</span>
+            </button>
+        </section>
+
+        <!-- Main Download Card -->
+        <main class="download-card glass-panel">
+            <form id="downloadForm" autocomplete="off">
+                <div class="input-wrapper" id="dropZone">
+                    <div class="input-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                         </svg>
-                        Modo TikTok <span class="badge-no-wm">SEM MARCA D'ÁGUA</span>
-                    </span>
-                </label>
-            </div>
+                    </div>
+                    <textarea id="urlInput" rows="2" placeholder="Cole o link aqui... YouTube, TikTok ou URL de imagem" required aria-label="URL para download"></textarea>
+                    <div class="drop-overlay hidden" id="dropOverlay">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span>Solte aqui</span>
+                    </div>
+                </div>
 
-            <form id="downloadForm">
-                <div class="input-group">
-                    <textarea id="imageUrls" rows="3" placeholder="Cole uma ou várias URLs listadas aqui... (ex: https://youtube.com/... ou https://tiktok.com/...)" required></textarea>
-                    
-                    <select id="formatSelect" class="format-dropdown">
-                        <option value="auto">Automático (Vídeo MP4 / Imagem PNG)</option>
-                        <option value="audio">Apenas Áudio (M4A)</option>
-                        <option value="png">Forçar Imagem (PNG)</option>
-                        <option value="jpeg">Forçar Imagem (JPEG)</option>
-                    </select>
+                <div class="controls-row">
+                    <div class="select-wrapper">
+                        <select id="formatSelect" aria-label="Formato de saída">
+                            <option value="auto">Automático</option>
+                            <option value="audio">Apenas Áudio (M4A)</option>
+                            <option value="png">Imagem PNG</option>
+                            <option value="jpeg">Imagem JPEG</option>
+                        </select>
+                        <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
 
-                    <button type="submit" id="submitBtn">
-                        <span class="btn-text">Processar Links</span>
-                        <div class="loader hidden" id="spinner"></div>
+                    <button type="submit" id="submitBtn" aria-label="Iniciar download">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span class="btn-text">Download</span>
+                        <div class="btn-loader hidden" id="btnLoader"></div>
                     </button>
                 </div>
             </form>
 
-            <div id="statusMessage" class="hidden"></div>
-
-            <div id="previewContainer" class="hidden glass-panel preview-panel">
-                <h3>Preview</h3>
-                <div class="img-wrapper">
-                    <img id="imagePreview" src="" alt="Preview da Imagem">
+            <!-- Progress Bar -->
+            <div class="progress-wrapper hidden" id="progressWrapper">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
                 </div>
+                <span class="progress-label" id="progressLabel">Conectando...</span>
+            </div>
+
+            <!-- Platform Detected Badge -->
+            <div class="detected-badge hidden" id="detectedBadge">
+                <span class="detected-dot"></span>
+                <span class="detected-text" id="detectedText">TikTok detectado — download sem marca d'água</span>
             </div>
         </main>
+
+        <!-- Status Toast -->
+        <div class="toast hidden" id="toast" role="alert" aria-live="polite">
+            <div class="toast-icon" id="toastIcon"></div>
+            <span class="toast-message" id="toastMessage"></span>
+            <button class="toast-close" id="toastClose" aria-label="Fechar notificação">&times;</button>
+        </div>
+
+        <!-- Preview -->
+        <div id="previewContainer" class="hidden glass-panel preview-panel">
+            <div class="preview-header">
+                <h3>Preview</h3>
+                <button class="preview-close" id="previewClose" aria-label="Fechar preview">&times;</button>
+            </div>
+            <div class="img-wrapper">
+                <img id="imagePreview" src="" alt="Preview da Imagem">
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <span>Feito Por Matheus.Dev — GhostFetch v1.1.0</span>
+        </footer>
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
