@@ -23,6 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropZone = $('dropZone');
     const dropOverlay = $('dropOverlay');
 
+    // TikTok toggle elements
+    const tiktokToggleWrapper = $('tiktokToggleWrapper');
+    const toggleVideo = $('toggleVideo');
+    const toggleAudio = $('toggleAudio');
+    const toggleSlider = $('toggleSlider');
+
     const cards = {
         image: $('cardImage'),
         youtube: $('cardYoutube'),
@@ -30,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let toastTimeout = null;
+    let tiktokAudioOnly = false;
 
     // ==========================================
     // Platform Detection
@@ -63,6 +70,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
+    // TikTok Toggle (Video / Audio)
+    // ==========================================
+    function showTikTokToggle() {
+        tiktokToggleWrapper.classList.remove('hidden');
+    }
+
+    function hideTikTokToggle() {
+        tiktokToggleWrapper.classList.add('hidden');
+        setTikTokMode('video');
+    }
+
+    function setTikTokMode(mode) {
+        tiktokAudioOnly = mode === 'audio';
+
+        toggleVideo.classList.toggle('active', mode === 'video');
+        toggleAudio.classList.toggle('active', mode === 'audio');
+
+        if (mode === 'audio') {
+            toggleSlider.classList.add('audio-active');
+            detectedText.textContent = 'TikTok detectado — apenas áudio (MP3)';
+        } else {
+            toggleSlider.classList.remove('audio-active');
+            detectedText.textContent = 'TikTok detectado — download sem marca d\'água';
+        }
+    }
+
+    toggleVideo.addEventListener('click', () => setTikTokMode('video'));
+    toggleAudio.addEventListener('click', () => setTikTokMode('audio'));
+
+    // ==========================================
     // Smart URL Input Detection
     // ==========================================
     urlInput.addEventListener('input', () => {
@@ -81,14 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (platform.key === 'tiktok') {
                 formatSelect.disabled = true;
                 formatSelect.parentElement.style.opacity = '0.4';
+                showTikTokToggle();
             } else {
                 formatSelect.disabled = false;
                 formatSelect.parentElement.style.opacity = '1';
+                hideTikTokToggle();
             }
         } else {
             detectedBadge.classList.add('hidden');
             formatSelect.disabled = false;
             formatSelect.parentElement.style.opacity = '1';
+            hideTikTokToggle();
         }
     });
 
@@ -114,10 +154,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 formatSelect.parentElement.style.opacity = '0.4';
                 detectedText.textContent = 'Modo TikTok ativo — download sem marca d\'água';
                 detectedBadge.classList.remove('hidden');
+                showTikTokToggle();
             } else {
                 formatSelect.disabled = false;
                 formatSelect.parentElement.style.opacity = '1';
                 detectedBadge.classList.add('hidden');
+                hideTikTokToggle();
             }
         });
     });
@@ -233,9 +275,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isTikTokMode && !isBatch) {
                 endpoint = '/api/download/tiktok';
-                bodyPayload = { url: urls[0] };
-                showProgress('Conectando ao TikTok...');
-                setTimeout(() => updateProgress('Baixando vídeo sem marca d\'água...'), 2000);
+                bodyPayload = { url: urls[0], audio_only: tiktokAudioOnly };
+
+                if (tiktokAudioOnly) {
+                    showProgress('Conectando ao TikTok...');
+                    setTimeout(() => updateProgress('Extraindo áudio do vídeo...'), 2000);
+                    setTimeout(() => updateProgress('Convertendo para MP3...'), 4000);
+                } else {
+                    showProgress('Conectando ao TikTok...');
+                    setTimeout(() => updateProgress('Baixando vídeo sem marca d\'água...'), 2000);
+                }
             } else if (isBatch) {
                 endpoint = '/api/download/batch';
                 bodyPayload = { urls, format };
@@ -276,7 +325,8 @@ document.addEventListener('DOMContentLoaded', () => {
             a.href = objectUrl;
 
             let filename = 'download';
-            if (isTikTokMode) filename = 'tiktok_video.mp4';
+            if (isTikTokMode && tiktokAudioOnly) filename = 'tiktok_audio.mp3';
+            else if (isTikTokMode) filename = 'tiktok_video.mp4';
             else if (isBatch) filename = 'downloads.zip';
             else if (isMedia) filename = format === 'audio' ? 'audio.m4a' : 'video.mp4';
             else filename = `imagem.${format === 'auto' ? 'png' : format}`;
@@ -297,7 +347,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 5000);
 
             const msg = isTikTokMode
-                ? 'Vídeo TikTok baixado sem marca d\'água!'
+                ? (tiktokAudioOnly
+                    ? 'Áudio do TikTok baixado com sucesso!'
+                    : 'Vídeo TikTok baixado sem marca d\'água!')
                 : 'Download concluído com sucesso!';
             showToast(msg, 'success');
 

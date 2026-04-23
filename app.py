@@ -114,6 +114,38 @@ def download_tiktok_no_watermark(url, output_dir):
             filename = base + '.mp4'
         return filename, info
 
+def download_tiktok_audio_only(url, output_dir):
+    """Download only the audio from a TikTok video using yt-dlp + FFmpeg."""
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': os.path.join(output_dir, '%(title)s_%(id)s.%(ext)s'),
+        'noplaylist': True,
+        'quiet': True,
+        'restrictfilenames': True,
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        filename = ydl.prepare_filename(info)
+        # FFmpegExtractAudio changes the extension to .mp3
+        base, _ = os.path.splitext(filename)
+        mp3_path = base + '.mp3'
+        if os.path.exists(mp3_path):
+            return mp3_path, info
+        # Fallback: check for other audio extensions
+        for ext in ['.m4a', '.ogg', '.opus', '.wav']:
+            if os.path.exists(base + ext):
+                return base + ext, info
+        return filename, info
+
 @app.route('/api/download/media', methods=['POST'])
 def download_media():
     data = request.get_json()
@@ -142,6 +174,7 @@ def download_tiktok():
         return jsonify({'error': 'URL is required'}), 400
 
     url = data['url']
+    audio_only = data.get('audio_only', False)
 
     # Validate TikTok URL
     tiktok_pattern = r'(tiktok\.com|vm\.tiktok\.com)'
@@ -150,20 +183,31 @@ def download_tiktok():
 
     try:
         temp_dir = tempfile.gettempdir()
-        filename, info = download_tiktok_no_watermark(url, temp_dir)
 
-        title = info.get('title', 'tiktok_video')[:50]
-        safe_title = re.sub(r'[^\w\s-]', '', title).strip().replace(' ', '_')
-        download_name = f'{safe_title}.mp4' if safe_title else 'tiktok_video.mp4'
-
-        return send_file(
-            filename,
-            mimetype='video/mp4',
-            as_attachment=True,
-            download_name=download_name
-        )
+        if audio_only:
+            filename, info = download_tiktok_audio_only(url, temp_dir)
+            title = info.get('title', 'tiktok_audio')[:50]
+            safe_title = re.sub(r'[^\w\s-]', '', title).strip().replace(' ', '_')
+            download_name = f'{safe_title}.mp3' if safe_title else 'tiktok_audio.mp3'
+            return send_file(
+                filename,
+                mimetype='audio/mpeg',
+                as_attachment=True,
+                download_name=download_name
+            )
+        else:
+            filename, info = download_tiktok_no_watermark(url, temp_dir)
+            title = info.get('title', 'tiktok_video')[:50]
+            safe_title = re.sub(r'[^\w\s-]', '', title).strip().replace(' ', '_')
+            download_name = f'{safe_title}.mp4' if safe_title else 'tiktok_video.mp4'
+            return send_file(
+                filename,
+                mimetype='video/mp4',
+                as_attachment=True,
+                download_name=download_name
+            )
     except Exception as e:
-        return jsonify({'error': f'Falha ao baixar vídeo TikTok: {str(e)}'}), 500
+        return jsonify({'error': f'Falha ao baixar {"áudio" if audio_only else "vídeo"} TikTok: {str(e)}'}), 500
 
 @app.route('/api/download/batch', methods=['POST'])
 def download_batch():
